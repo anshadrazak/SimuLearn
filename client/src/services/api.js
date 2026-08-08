@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+const API_URL = import.meta.env.VITE_API_URL || 'https://simulearn-m0i4.onrender.com';
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: `${API_URL}/api`,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -9,7 +11,7 @@ const api = axios.create({
 });
 
 const rawAxios = axios.create({
-  baseURL: '/api',
+  baseURL: `${API_URL}/api`,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
