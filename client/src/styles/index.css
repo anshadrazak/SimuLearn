@@ -2,8 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: none;
+}
+
 @layer base {
   :root {
+    --sidebar-width: 16rem;
     --color-bg-primary: #f8fafc;
     --color-bg-secondary: #ffffff;
     --color-bg-tertiary: #f1f5f9;
@@ -248,6 +260,26 @@
 }
 
 @layer utilities {
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .safe-right {
+    padding-right: env(safe-area-inset-right);
+  }
+
   .bg-gradient-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   }
@@ -273,5 +305,20 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+}
+
+@media (max-width: 640px) {
+  .card {
+    border-radius: 0.75rem;
+  }
+
+  table {
+    font-size: 0.8125rem;
+  }
+
+  th, td {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
   }
 }

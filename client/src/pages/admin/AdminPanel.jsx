@@ -1,6 +1,8 @@
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import ThemeToggle from '../../components/ThemeToggle';
+import MobileHeader from '../../components/MobileHeader';
+import MobileSidebar from '../../components/MobileSidebar';
 
 const nav = [
   { to: '/admin', end: true, label: 'Dashboard', icon: '📊' },
@@ -21,10 +23,13 @@ const nav = [
 export default function AdminPanel() {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const pageTitle = location.pathname.split('/').pop()?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Dashboard';
 
   return (
     <div className="min-h-screen flex bg-[var(--color-bg-primary)]">
-      <aside className="w-64 bg-[var(--color-sidebar)] text-white flex flex-col shadow-2xl">
+      <aside className="hidden lg:flex lg:w-64 bg-[var(--color-sidebar)] text-white flex-col shadow-2xl">
         <div className="p-6 border-b border-slate-700">
           <div className="flex items-center justify-between">
             <div>
@@ -64,8 +69,16 @@ export default function AdminPanel() {
           </button>
         </div>
       </aside>
+      <MobileSidebar
+        isOpen={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        navItems={nav}
+        user={user}
+        onLogout={logout}
+      />
       <main className="flex-1 overflow-auto">
-        <div className="p-6 max-w-7xl">
+        <MobileHeader onMenuClick={() => setMobileOpen(true)} title={pageTitle} />
+        <div className="p-4 sm:p-6 max-w-7xl">
           <Outlet />
         </div>
       </main>

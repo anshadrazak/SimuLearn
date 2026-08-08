@@ -4,7 +4,7 @@ import { courseApi } from '../../services/courseApi';
 import { progressApi } from '../../services/progressApi';
 import { quizApi } from '../../services/quizApi';
 import { useAuth } from '../../contexts/AuthContext';
-import { Trophy, Medal, Award, RefreshCw } from 'lucide-react';
+import { Trophy, Medal, Award, RefreshCw, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 
 export default function CourseDetail() {
   const { courseId } = useParams();
@@ -18,6 +18,7 @@ export default function CourseDetail() {
   const [testResult, setTestResult] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const videoRef = useRef(null);
   const lastReportedProgress = useRef(0);
 
@@ -212,7 +213,17 @@ export default function CourseDetail() {
 
   return (
     <div className="flex h-[calc(100vh-4rem)] bg-gray-50 dark:bg-slate-900">
-      <main className="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-slate-900 mr-72">
+      <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-50 dark:bg-slate-900">
+        <div className="flex items-center gap-2 mb-4 lg:hidden">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-300 transition-colors touch-manipulation"
+            aria-label="Open lesson panel"
+          >
+            <PanelLeftOpen size={20} />
+          </button>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{course.title}</span>
+        </div>
         {currentLesson ? (
           <div className="max-w-4xl mx-auto">
             <div className="flex justify-between items-start mb-6">
@@ -353,7 +364,7 @@ export default function CourseDetail() {
         )}
       </main>
 
-      <aside className="fixed top-0 right-0 bg-white dark:bg-slate-800 border-l overflow-y-auto transition-all duration-300 ease-in-out w-72 flex flex-col h-screen z-10">
+      <aside className="hidden lg:flex fixed top-0 right-0 bg-white dark:bg-slate-800 border-l overflow-y-auto transition-all duration-300 ease-in-out w-72 flex-col h-screen z-10">
         <div className="p-4 border-b border-gray-200 dark:border-slate-600">
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">{course.title}</h1>
           <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{course.description}</p>
@@ -519,6 +530,176 @@ export default function CourseDetail() {
           </div>
         )}
       </aside>
+
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
+          <div className="absolute inset-y-0 right-0 w-80 bg-white dark:bg-slate-800 border-l overflow-y-auto transition-transform duration-300 ease-in-out flex flex-col h-full shadow-2xl">
+            <div className="p-4 border-b border-gray-200 dark:border-slate-600">
+              <h1 className="text-lg font-bold text-gray-900 dark:text-white">{course.title}</h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{course.description}</p>
+            </div>
+            <div className="px-4 pb-4 space-y-4 overflow-y-auto flex-1">
+              {course.modules?.map(mod => (
+                <div key={mod._id}>
+                  <details open className="mb-2">
+                    <summary className="font-semibold text-sm text-gray-700 dark:text-gray-300 cursor-pointer">{mod.title}</summary>
+                    <div className="mt-2 space-y-1">
+                      {mod.lessons?.map(lesson => {
+                        const completed = isLessonCompleted(lesson._id);
+                        const unlocked = isLessonUnlocked(lesson, allLessons);
+                        const isActive = currentLesson?._id === lesson._id;
+                        return (
+                          <button
+                            key={lesson._id}
+                            onClick={() => { unlocked && handleLessonClick(lesson); setSidebarOpen(false); }}
+                            disabled={!unlocked}
+                            className={`w-full text-left text-sm p-2 rounded transition-all ${
+                              isActive
+                                ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
+                                : !unlocked
+                                ? 'opacity-40 cursor-not-allowed text-gray-400 hover:bg-transparent'
+                                : 'hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300'
+                            }`}
+                          >
+                            <span className="mr-1">{completed ? '✅' : !unlocked ? '🔒' : '▶'}</span>
+                            {lesson.title}
+                            {lesson.isFree && <span className="ml-1 text-xs text-green-600 dark:text-green-400">(Free)</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </details>
+                </div>
+              ))}
+              {testLesson && (
+                <div key={testLesson._id}>
+                  <details open>
+                    <summary className="font-semibold text-sm cursor-pointer text-gray-700 dark:text-gray-300">Course Test</summary>
+                    <div className="mt-2 space-y-1">
+                      <button
+                        onClick={() => { isTestUnlocked() && !testResult && handleLessonClick(testLesson); setSidebarOpen(false); }}
+                        disabled={!isTestUnlocked() || testResult}
+                        className={`w-full text-left text-sm p-2 rounded transition-all ${
+                          testResult
+                            ? 'opacity-60 cursor-default text-gray-500 dark:text-gray-400'
+                            : currentLesson?._id === testLesson._id
+                            ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
+                            : !isTestUnlocked()
+                            ? 'opacity-40 cursor-not-allowed text-gray-400 hover:bg-transparent'
+                            : 'hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        <span className="mr-1">{testResult ? '✅' : isLessonCompleted(testLesson._id) ? '✅' : !isTestUnlocked() ? '🔒' : '🎯'}</span>
+                        {testLesson.title}
+                      </button>
+                      {testResult && (
+                        <div className="mt-2 p-3 bg-gray-50 dark:bg-slate-700/50 rounded text-center">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Your Score</p>
+                          <p className={`text-sm font-bold ${(testResult.finalGrade || testResult.score) >= (courseQuiz?.passingScore || 50) ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                            {testResult.finalGrade || testResult.score}% ({Math.round(((testResult.finalGrade || testResult.score) / 100) * (testResult.totalPoints || 30))}/{testResult.totalPoints || 30} marks)
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {testResult.passed ? '✅ Passed' : '❌ Failed'}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </details>
+                </div>
+              )}
+            </div>
+
+            {courseQuiz && (
+              <div className="px-4 pb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                    <Trophy className="w-4 h-4 text-yellow-400" />
+                    Leaderboard
+                  </h3>
+                  <button
+                    onClick={() => setRefreshKey(k => k + 1)}
+                    className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-all duration-200 hover:bg-gray-100 dark:hover:bg-slate-700"
+                    title="Refresh"
+                  >
+                    <RefreshCw size={14} />
+                  </button>
+                </div>
+                {!courseQuiz.passingScore && leaderboard.length === 0 ? (
+                  <div className="text-center py-6 text-gray-500 dark:text-gray-400">
+                    <Trophy className="w-8 h-8 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
+                    <p className="text-sm">No results yet.</p>
+                  </div>
+                ) : leaderboard.length === 0 ? (
+                  <div className="space-y-2">
+                    {testResult && (
+                      <div className="text-center py-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Your Score</p>
+                        <p className={`font-bold text-lg ${(testResult.finalGrade || testResult.score) >= (courseQuiz?.passingScore || 50) ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                          {testResult.finalGrade || testResult.score}%
+                        </p>
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-400 dark:text-gray-500 text-center">Take the test to appear here!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {leaderboard.slice(0, 3).map((entry, idx) => {
+                      const isCurrentUser = entry.student?._id === user?._id;
+                      return (
+                        <div
+                          key={idx}
+                          className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
+                            isCurrentUser
+                              ? 'bg-gradient-to-r from-yellow-100 to-yellow-50 dark:from-yellow-900/30 dark:to-yellow-900/10 ring-1 ring-yellow-400 shadow-md'
+                              : idx === 0
+                              ? 'bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-900/10'
+                              : idx === 1
+                              ? 'bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-700/50'
+                              : 'bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-900/10'
+                          }`}
+                        >
+                          <div className="flex items-center justify-center w-6">
+                            {getRankIcon(idx)}
+                            {!getRankIcon(idx) && <span className={`font-bold text-sm ${getRankStyle(idx)}`}>#{idx + 1}</span>}
+                          </div>
+                          <div className="w-7 h-7 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
+                              {entry.student?.firstName?.charAt(0)}{entry.student?.lastName?.charAt(0)}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                              {entry.student?.firstName} {entry.student?.lastName}
+                              {entry.student?._id === user?._id && ' (You)'}
+                            </p>
+                          </div>
+                          <span className="text-sm font-bold text-gray-900 dark:text-white">{entry.score}%</span>
+                        </div>
+                      );
+                    })}
+                    {!leaderboard.find(e => e.student?._id === user?._id) && testResult && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 text-center pt-2">
+                        Your position would be: #{leaderboard.filter((e) => (e.score || 0) > (testResult.finalGrade || testResult.score || 0)).length + 1}
+                      </p>
+                    )}
+                    {leaderboard.length > 3 && (
+                      <p className="text-xs text-gray-400 dark:text-gray-500 text-center pt-2">+{leaderboard.length - 3} more</p>
+                    )}
+                  </div>
+                )}
+                <Link
+                  to={`/quizzes/${courseQuiz._id}/leaderboard`}
+                  onClick={() => setRefreshKey(k => k + 1)}
+                  className="flex items-center justify-center gap-1 mt-4 text-blue-600 dark:text-blue-400 hover:underline text-xs text-center transition-colors"
+                >
+                  View Full Leaderboard
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

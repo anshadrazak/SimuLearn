@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import api from './services/api';
 import { Link } from 'react-router-dom';
 import ThemeToggle from './components/ThemeToggle';
+import MobileHeader from './components/MobileHeader';
+import MobileSidebar from './components/MobileSidebar';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
@@ -58,10 +60,27 @@ function Dashboard() {
   const location = useLocation();
   const isStudent = user?.role === 'student';
   const isAdmin = user?.role === 'admin';
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const navItems = [
+    { to: '/', end: true, label: 'Dashboard', icon: '📊' },
+    ...(isStudent ? [
+      { to: '/courses', label: 'My Courses', icon: '📚' },
+      { to: '/labs', label: 'Labs', icon: '🔬' },
+      { to: '/quizzes', label: 'Quizzes', icon: '❓' },
+      { to: '/scenarios', label: 'Scenarios', icon: '🎭' },
+    ] : []),
+    ...(isAdmin ? [
+      { to: '/admin', label: 'Admin Panel', icon: '⚙️' },
+    ] : []),
+    { to: '/settings', label: 'Account Settings', icon: '👤' },
+  ];
+
+  const pageTitle = location.pathname === '/' ? 'Dashboard' : location.pathname.split('/').pop()?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || '';
 
   return (
     <div className="min-h-screen flex bg-[var(--color-bg-primary)]">
-      <aside className="w-64 bg-[var(--color-sidebar)] text-white flex flex-col overflow-hidden transition-all duration-300">
+      <aside className="hidden lg:flex lg:w-64 bg-[var(--color-sidebar)] text-white flex-col overflow-hidden transition-all duration-300">
         <div className="p-6 border-b border-white/10 flex items-center justify-between">
           <div>
             <Link to="/" className="block">
@@ -88,8 +107,16 @@ function Dashboard() {
           <button onClick={logout} className="w-full text-left px-3 py-2 text-sm text-red-300/80 hover:text-white hover:bg-red-800/10 rounded-lg transition-all">Logout</button>
         </nav>
       </aside>
+      <MobileSidebar
+        isOpen={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        navItems={navItems}
+        user={user}
+        onLogout={logout}
+      />
       <main className="flex-1 overflow-auto">
-        <div className="p-6 max-w-7xl">
+        <MobileHeader onMenuClick={() => setMobileOpen(true)} title={pageTitle} />
+        <div className="p-4 sm:p-6 max-w-7xl">
           <Outlet />
         </div>
       </main>
