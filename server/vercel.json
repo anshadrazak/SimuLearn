@@ -1,0 +1,19 @@
+{
+  "name": "lms-backend",
+  "version": 2,
+  "builds": [
+    {
+      "source": "index.js",
+      "use": "nodejs20.x",
+      "config": {
+        "includeFiles": ["server/**", "uploads/**"]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.js"
+    }
+  ]
+}

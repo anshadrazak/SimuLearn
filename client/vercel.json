@@ -1,0 +1,30 @@
+{
+  "name": "lms-frontend",
+  "version": 2,
+  "builds": [
+    {
+      "source": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "source": "/(.*)",
+      "headers": {
+        "Cache-Control": "s-maxage=1, stale-while-revalidate=59"
+      },
+      "continue": true
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "https://lms-backend-xi.vercel.app/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
