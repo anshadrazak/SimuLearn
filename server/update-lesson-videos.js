@@ -17,13 +17,13 @@ async function updateLessonVideos() {
     const lessons = await Lesson.find({ course: courseId }).sort('sortOrder');
 
     const videoMap = {
-      0: 'http://localhost:5000/uploads/lesson1.mp4',
-      1: 'http://localhost:5000/uploads/lesson2.mp4',
-      2: 'http://localhost:5000/uploads/lesson3.mp4',
+      0: 'https://simulearn-m0i4.onrender.com/uploads/lesson1.mp4',
+      1: 'https://simulearn-m0i4.onrender.com/uploads/lesson2.mp4',
+      2: 'https://simulearn-m0i4.onrender.com/uploads/lesson3.mp4',
     };
 
     for (const lesson of lessons) {
-      const videoUrl = videoMap[lesson.sortOrder] || `http://localhost:5000/uploads/lesson${lesson.sortOrder + 1}.mp4`;
+      const videoUrl = videoMap[lesson.sortOrder] || `https://simulearn-m0i4.onrender.com/uploads/lesson${lesson.sortOrder + 1}.mp4`;
       await Lesson.findByIdAndUpdate(lesson._id, {
         videoUrl,
         contentType: 'video',

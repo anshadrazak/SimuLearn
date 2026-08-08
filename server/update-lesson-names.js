@@ -28,7 +28,7 @@ async function updateLessonNames() {
       await Lesson.findByIdAndUpdate(lesson._id, {
         title: `Lesson ${i + 1}`,
         description: `Complete this video lesson to unlock the next one.`,
-        videoUrl: 'http://localhost:5000/uploads/video.mp4',
+        videoUrl: 'https://simulearn-m0i4.onrender.com/uploads/video.mp4',
         contentType: 'video',
         duration: 15, // 15 minutes
         sortOrder: i,
