@@ -245,7 +245,17 @@ function CoursesList() {
           {courses.map(course => (
             <Link key={course._id} to={`/courses/${course._id}`} className="card p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
               <div className="h-32 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg mb-4 opacity-80" />
-              <h2 className="font-semibold text-gray-900 dark:text-white">{course.title}</h2>
+              <div className="flex items-start justify-between gap-2">
+                <h2 className="font-semibold text-gray-900 dark:text-white">{course.title}</h2>
+                {isEnrolled && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Enrolled
+                  </span>
+                )}
+              </div>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{course.shortDescription || course.description?.slice(0, 100)}</p>
             </Link>
           ))}
@@ -261,6 +271,12 @@ function AllCourses() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [enrollingId, setEnrollingId] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -289,8 +305,10 @@ function AllCourses() {
     try {
       const res = await enrollmentApi.enroll(courseId);
       setEnrollments(prev => [...prev, res.data]);
+      showToast('Successfully enrolled! Start learning now.');
     } catch (err) {
       console.error('Enroll failed', err);
+      showToast('Enrollment failed. Please try again.', 'error');
     } finally {
       setEnrollingId(null);
     }
@@ -301,8 +319,10 @@ function AllCourses() {
     try {
       await enrollmentApi.unenroll(courseId);
       setEnrollments(prev => prev.filter(e => e.course?._id !== courseId));
+      showToast('You have been unenrolled from the course.');
     } catch (err) {
       console.error('Unenroll failed', err);
+      showToast('Unenroll failed. Please try again.', 'error');
     } finally {
       setEnrollingId(null);
     }
@@ -337,6 +357,20 @@ function AllCourses() {
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">All Courses</h1>
+      {toast && (
+        <div className={`mb-4 p-4 rounded-lg flex items-center gap-3 ${toast.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800'}`}>
+          {toast.type === 'success' ? (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+          )}
+          <span className="text-sm font-medium">{toast.message}</span>
+        </div>
+      )}
       {courses.length === 0 ? (
         <p className="text-gray-500 dark:text-gray-400">No courses available yet.</p>
       ) : (
