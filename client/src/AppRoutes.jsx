@@ -245,17 +245,7 @@ function CoursesList() {
           {courses.map(course => (
             <Link key={course._id} to={`/courses/${course._id}`} className="card p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
               <div className="h-32 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg mb-4 opacity-80" />
-              <div className="flex items-start justify-between gap-2">
-                <h2 className="font-semibold text-gray-900 dark:text-white">{course.title}</h2>
-                {isEnrolled && (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    Enrolled
-                  </span>
-                )}
-              </div>
+              <h2 className="font-semibold text-gray-900 dark:text-white">{course.title}</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{course.shortDescription || course.description?.slice(0, 100)}</p>
             </Link>
           ))}
