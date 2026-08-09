@@ -96,7 +96,8 @@ function Dashboard() {
           <Link to="/" className={`block px-3 py-2 rounded-lg text-sm transition-all ${location.pathname === '/' ? 'bg-white/10 text-white' : 'text-slate-300/80 hover:bg-white/5 hover:text-white'}`}>Dashboard</Link>
           {isStudent && (
             <>
-              <Link to="/courses" className={`block px-3 py-2 rounded-lg text-sm transition-all ${location.pathname.startsWith('/courses') ? 'bg-white/10 text-white' : 'text-slate-300/80 hover:bg-white/5 hover:text-white'}`}>My Courses</Link>
+              <Link to="/courses" className={`block px-3 py-2 rounded-lg text-sm transition-all ${location.pathname.startsWith('/courses') && !location.pathname.includes('all-courses') ? 'bg-white/10 text-white' : 'text-slate-300/80 hover:bg-white/5 hover:text-white'}`}>My Courses</Link>
+              <Link to="/all-courses" className={`block px-3 py-2 rounded-lg text-sm transition-all ${location.pathname === '/all-courses' ? 'bg-white/10 text-white' : 'text-slate-300/80 hover:bg-white/5 hover:text-white'}`}>All Courses</Link>
               <Link to="/labs" className={`block px-3 py-2 rounded-lg text-sm transition-all ${location.pathname === '/labs' ? 'bg-white/10 text-white' : 'text-slate-300/80 hover:bg-white/5 hover:text-white'}`}>Labs</Link>
               <Link to="/quizzes" className={`block px-3 py-2 rounded-lg text-sm transition-all ${location.pathname === '/quizzes' ? 'bg-white/10 text-white' : 'text-slate-300/80 hover:bg-white/5 hover:text-white'}`}>Quizzes</Link>
               <Link to="/scenarios" className={`block px-3 py-2 rounded-lg text-sm transition-all ${location.pathname === '/scenarios' ? 'bg-white/10 text-white' : 'text-slate-300/80 hover:bg-white/5 hover:text-white'}`}>Scenarios</Link>
@@ -224,7 +225,21 @@ function CoursesList() {
     <div>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">My Courses</h1>
       {courses.length === 0 ? (
-        <p className="text-gray-500 dark:text-gray-400">No courses enrolled yet. <Link to="/all-courses" className="text-indigo-600 hover:underline">Browse all courses</Link></p>
+        <div className="card p-8 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A9 9 0 006 18c1.052 0 2.062-.18 3-.512m0-13.042A8.967 8.967 0 0118 3.75c1.052 0 2.062.18 3 .512v14.25A9 9 0 0118 18c-1.052 0-2.062-.18-3-.512" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No courses enrolled yet</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">You haven't enrolled in any courses yet. Browse our catalog and start learning today.</p>
+          <Link to="/all-courses" className="btn btn-primary inline-flex items-center gap-2">
+            Browse all courses
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </Link>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {courses.map(course => (
