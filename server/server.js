@@ -32,6 +32,7 @@ import certificateRoutes from './routes/certificateRoutes.js';
 import roleRoutes from './routes/roleRoutes.js';
 import permissionRoutes from './routes/permissionRoutes.js';
 import progressRoutes from './routes/progressRoutes.js';
+import cloudinaryRoutes from './routes/cloudinaryRoutes.js';
 import { errorHandler, notFound } from './middlewares/errorMiddleware.js';
 
 const app = express();
@@ -72,6 +73,7 @@ app.use('/api/question-banks', questionBankRoutes);
 app.use('/api/certificates', certificateRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/permissions', permissionRoutes);
+app.use('/api/cloudinary', cloudinaryRoutes);
 // Serve uploads with permissive headers for video embedding and cross-origin access
 app.use('/uploads', (req, res, next) => {
   res.removeHeader('X-Frame-Options');

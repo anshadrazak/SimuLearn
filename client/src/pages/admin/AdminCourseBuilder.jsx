@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { courseApi, moduleApi, lessonApi, assetApi } from '../../services/courseApi';
+import { cloudinaryApi } from '../../services/cloudinaryApi';
 
 export default function AdminCourseBuilder() {
   const { courseId } = useParams();
@@ -12,6 +13,8 @@ export default function AdminCourseBuilder() {
   const [lessonModal, setLessonModal] = useState({ open: false, moduleId: null, lesson: null });
   const [moduleModal, setModuleModal] = useState(false);
   const [assets, setAssets] = useState([]);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [videoUploadProgress, setVideoUploadProgress] = useState(0);
 
   const [courseForm, setCourseForm] = useState({ title: '', description: '', shortDescription: '', level: 'beginner', price: 0 });
   const [moduleForm, setModuleForm] = useState({ title: '', description: '', sortOrder: 0 });
@@ -102,6 +105,23 @@ export default function AdminCourseBuilder() {
     const res = await assetApi.uploadAsset(file);
     setAssets([...assets, res.data]);
     setLessonForm({ ...lessonForm, attachments: [...lessonForm.attachments, res.data._id] });
+  };
+
+  const handleVideoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingVideo(true);
+    setVideoUploadProgress(0);
+    try {
+      const res = await cloudinaryApi.uploadVideo(file);
+      setLessonForm({ ...lessonForm, videoUrl: res.data.url });
+    } catch (err) {
+      console.error('Video upload failed', err);
+      alert('Failed to upload video');
+    } finally {
+      setUploadingVideo(false);
+      setVideoUploadProgress(0);
+    }
   };
 
   const addCodeBlock = () => setLessonForm({ ...lessonForm, codeBlocks: [...lessonForm.codeBlocks, { language: 'javascript', code: '' }] });
@@ -239,6 +259,20 @@ export default function AdminCourseBuilder() {
                   <input type="number" className="w-full border rounded p-2" value={lessonForm.duration} onChange={e => setLessonForm({ ...lessonForm, duration: Number(e.target.value) })} />
                 </div>
               </div>
+              {lessonForm.contentType === 'video' && (
+                <div>
+                  <label className="block text-sm font-medium mb-1">Upload Video</label>
+                  <input type="file" accept="video/*" onChange={handleVideoUpload} disabled={uploadingVideo} className="mb-2" />
+                  {uploadingVideo && (
+                    <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                      <div className="bg-indigo-600 h-2 rounded-full" style={{ width: `${videoUploadProgress}%` }} />
+                    </div>
+                  )}
+                  {lessonForm.videoUrl && (
+                    <p className="text-xs text-green-600">Video uploaded: {lessonForm.videoUrl.slice(0, 50)}...</p>
+                  )}
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium mb-1">Video URL</label>
                 <input className="w-full border rounded p-2" placeholder="https://www.youtube.com/embed/..." value={lessonForm.videoUrl} onChange={e => setLessonForm({ ...lessonForm, videoUrl: e.target.value })} />

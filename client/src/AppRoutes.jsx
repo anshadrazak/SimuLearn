@@ -39,6 +39,7 @@ import StudentScenarios from './pages/student/StudentScenarios';
 import StudentScenarioDetail from './pages/student/StudentScenarioDetail';
 import Leaderboard from './pages/student/Leaderboard';
 import AccountSettings from './pages/student/AccountSettings';
+import { enrollmentApi } from './services/enrollmentApi';
 
 const PrivateRoute = ({ children, roles }) => {
   const { user, loading } = useAuth();
@@ -66,6 +67,7 @@ function Dashboard() {
     { to: '/', end: true, label: 'Dashboard', icon: '📊' },
     ...(isStudent ? [
       { to: '/courses', label: 'My Courses', icon: '📚' },
+      { to: '/all-courses', label: 'All Courses', icon: '🏪' },
       { to: '/labs', label: 'Labs', icon: '🔬' },
       { to: '/quizzes', label: 'Quizzes', icon: '❓' },
       { to: '/scenarios', label: 'Scenarios', icon: '🎭' },
@@ -135,6 +137,7 @@ export default function AppRoutes() {
       <Route path="/" element={<PrivateRoute roles={['student', 'admin']}><Dashboard /></PrivateRoute>}>
         <Route index element={<DashboardHome />} />
         <Route path="courses" element={<CoursesList />} />
+        <Route path="all-courses" element={<AllCourses />} />
         <Route path="courses/:courseId" element={<StudentCourseDetail />} />
         <Route path="labs" element={<StudentLabs />} />
         <Route path="labs/:labId" element={<StudentLabDetail />} />
@@ -169,25 +172,27 @@ export default function AppRoutes() {
 }
 
 function CoursesList() {
-  const [courses, setCourses] = useState([]);
+  const [enrollments, setEnrollments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const loadCourses = async () => {
+    const loadEnrollments = async () => {
       setLoading(true);
       setError('');
       try {
-        const res = await api.get('/courses');
-        setCourses(res.data);
+        const res = await enrollmentApi.getMyEnrollments();
+        setEnrollments(res.data);
       } catch (err) {
-        setError(err.response?.data?.message || 'Failed to load courses');
+        setError(err.response?.data?.message || 'Failed to load enrollments');
       } finally {
         setLoading(false);
       }
     };
-    loadCourses();
+    loadEnrollments();
   }, []);
+
+  const courses = enrollments.map(e => e.course).filter(Boolean);
 
   if (loading) {
     return (
@@ -219,16 +224,140 @@ function CoursesList() {
     <div>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">My Courses</h1>
       {courses.length === 0 ? (
-        <p className="text-gray-500 dark:text-gray-400">No courses enrolled yet.</p>
+        <p className="text-gray-500 dark:text-gray-400">No courses enrolled yet. <Link to="/all-courses" className="text-indigo-600 hover:underline">Browse all courses</Link></p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {courses.map(course => (
             <Link key={course._id} to={`/courses/${course._id}`} className="card p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
               <div className="h-32 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg mb-4 opacity-80" />
               <h2 className="font-semibold text-gray-900 dark:text-white">{course.title}</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{course.shortDescription}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{course.shortDescription || course.description?.slice(0, 100)}</p>
             </Link>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AllCourses() {
+  const [courses, setCourses] = useState([]);
+  const [enrollments, setEnrollments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [enrollingId, setEnrollingId] = useState(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const [coursesRes, enrollmentsRes] = await Promise.all([
+          api.get('/courses'),
+          enrollmentApi.getMyEnrollments(),
+        ]);
+        setCourses(coursesRes.data);
+        setEnrollments(enrollmentsRes.data);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to load courses');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  const enrolledCourseIds = new Set(enrollments.map(e => e.course?._id).filter(Boolean));
+
+  const handleEnroll = async (courseId) => {
+    setEnrollingId(courseId);
+    try {
+      const res = await enrollmentApi.enroll(courseId);
+      setEnrollments(prev => [...prev, res.data]);
+    } catch (err) {
+      console.error('Enroll failed', err);
+    } finally {
+      setEnrollingId(null);
+    }
+  };
+
+  const handleUnenroll = async (courseId) => {
+    setEnrollingId(courseId);
+    try {
+      await enrollmentApi.unenroll(courseId);
+      setEnrollments(prev => prev.filter(e => e.course?._id !== courseId));
+    } catch (err) {
+      console.error('Unenroll failed', err);
+    } finally {
+      setEnrollingId(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">All Courses</h1>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="card p-6 animate-pulse">
+              <div className="h-32 bg-gray-200 dark:bg-slate-700 rounded-lg mb-4" />
+              <div className="h-4 bg-gray-200 dark:bg-slate-700 rounded w-3/4 mb-2" />
+              <div className="h-3 bg-gray-200 dark:bg-slate-700 rounded w-1/2" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
+        <button onClick={() => window.location.reload()} className="btn btn-primary">Retry</button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">All Courses</h1>
+      {courses.length === 0 ? (
+        <p className="text-gray-500 dark:text-gray-400">No courses available yet.</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {courses.map(course => {
+            const isEnrolled = enrolledCourseIds.has(course._id);
+            return (
+              <div key={course._id} className="card p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <div className="h-32 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg mb-4 opacity-80" />
+                <h2 className="font-semibold text-gray-900 dark:text-white">{course.title}</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{course.shortDescription || course.description?.slice(0, 100)}</p>
+                <div className="mt-4">
+                  {isEnrolled ? (
+                    <div className="flex items-center gap-2">
+                      <Link to={`/courses/${course._id}`} className="btn btn-primary flex-1">Continue</Link>
+                      <button
+                        onClick={() => handleUnenroll(course._id)}
+                        disabled={enrollingId === course._id}
+                        className="btn btn-secondary"
+                      >
+                        {enrollingId === course._id ? '...' : 'Unenroll'}
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleEnroll(course._id)}
+                      disabled={enrollingId === course._id}
+                      className="btn btn-primary w-full"
+                    >
+                      {enrollingId === course._id ? 'Enrolling...' : 'Enroll Now'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
