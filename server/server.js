@@ -50,6 +50,7 @@ const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100, standardHeaders:
 app.use('/api', limiter);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
