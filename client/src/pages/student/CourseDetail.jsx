@@ -123,12 +123,53 @@ export default function CourseDetail() {
     if (!videoRef.current || !activeLesson) return;
     const video = videoRef.current;
     const completed = progressMap[activeLesson._id]?.completed;
+    
+    // Allow free seeking if lesson is already completed
     if (completed) return;
+    
     const lastWatched = progressMap[activeLesson._id]?.watchedDuration || 0;
-    if (video.currentTime > lastWatched + 2) {
+    
+    // Prevent ANY forward seeking - only allow rewinding
+    if (video.currentTime > lastWatched + 0.5) {
       video.currentTime = lastWatched;
     }
   }, [activeLesson, progressMap]);
+
+  // Set video to last watched position when lesson changes
+  useEffect(() => {
+    if (!videoRef.current || !activeLesson) return;
+    const video = videoRef.current;
+    const lastWatched = progressMap[activeLesson._id]?.watchedDuration || 0;
+    
+    const setInitialPosition = () => {
+      if (lastWatched > 0 && video.duration > 0) {
+        video.currentTime = lastWatched;
+      }
+    };
+
+    // Wait for video metadata to load
+    if (video.readyState >= 1) {
+      setInitialPosition();
+    } else {
+      video.addEventListener('loadedmetadata', setInitialPosition);
+      return () => video.removeEventListener('loadedmetadata', setInitialPosition);
+    }
+  }, [activeLesson, progressMap]);
+
+  // Prevent video download and right-click
+  const handleContextMenu = useCallback((e) => {
+    e.preventDefault();
+    return false;
+  }, []);
+
+  const handleVideoLoad = useCallback(() => {
+    if (!videoRef.current) return;
+    const video = videoRef.current;
+    
+    // Disable download attribute
+    video.setAttribute('controlsList', 'nodownload');
+    video.setAttribute('disablePictureInPicture', 'true');
+  }, []);
 
   const isLessonCompleted = (lessonId) => progressMap[lessonId]?.completed || false;
 
@@ -250,9 +291,14 @@ export default function CourseDetail() {
                     src={currentLesson.videoUrl}
                     className="w-full aspect-video rounded-lg shadow-lg"
                     controls
+                    controlsList="nodownload"
+                    disablePictureInPicture
                     onTimeUpdate={handleTimeUpdate}
                     onEnded={handleVideoEnded}
                     onSeeking={handleSeeking}
+                    onContextMenu={handleContextMenu}
+                    onLoadedMetadata={handleVideoLoad}
+                    style={{ userSelect: 'none' }}
                   />
                 )}
               </div>
