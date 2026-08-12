@@ -21,10 +21,95 @@ export default function CourseDetail() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const videoRef = useRef(null);
   const lastReportedProgress = useRef(0);
+  const watermarkRef = useRef(null);
 
   useEffect(() => {
     lastReportedProgress.current = 0;
   }, [activeLesson]);
+
+  // Screen recording detection and prevention
+  useEffect(() => {
+    let blurTimeout;
+    
+    // Detect when user leaves the tab/window
+    const handleVisibilityChange = () => {
+      if (document.hidden && videoRef.current && !videoRef.current.paused) {
+        videoRef.current.pause();
+      }
+    };
+
+    // Detect screen recording (experimental)
+    const detectScreenCapture = () => {
+      if (document.pictureInPictureElement || document.fullscreenElement) {
+        // User might be trying to isolate video for recording
+        console.warn('Potential recording attempt detected');
+      }
+    };
+
+    // Prevent developer tools (makes it harder to inspect video sources)
+    const handleDevTools = (e) => {
+      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    // Detect window blur (screen recording software active)
+    const handleBlur = () => {
+      if (videoRef.current && !videoRef.current.paused) {
+        blurTimeout = setTimeout(() => {
+          if (videoRef.current && !document.hasFocus()) {
+            videoRef.current.pause();
+          }
+        }, 100);
+      }
+    };
+
+    const handleFocus = () => {
+      clearTimeout(blurTimeout);
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('keydown', handleDevTools);
+    window.addEventListener('blur', handleBlur);
+    window.addEventListener('focus', handleFocus);
+    
+    const interval = setInterval(detectScreenCapture, 1000);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('keydown', handleDevTools);
+      window.removeEventListener('blur', handleBlur);
+      window.removeEventListener('focus', handleFocus);
+      clearInterval(interval);
+      clearTimeout(blurTimeout);
+    };
+  }, []);
+
+  // Dynamic watermark overlay
+  useEffect(() => {
+    if (!watermarkRef.current || !user) return;
+    
+    const updateWatermark = () => {
+      const watermark = watermarkRef.current;
+      if (!watermark) return;
+      
+      // Randomize position every few seconds
+      const maxX = window.innerWidth - 250;
+      const maxY = window.innerHeight - 50;
+      const x = Math.random() * maxX;
+      const y = Math.random() * maxY;
+      
+      watermark.style.left = `${x}px`;
+      watermark.style.top = `${y}px`;
+    };
+
+    // Update watermark position every 5 seconds
+    const watermarkInterval = setInterval(updateWatermark, 5000);
+    updateWatermark(); // Initial position
+
+    return () => clearInterval(watermarkInterval);
+  }, [user, activeLesson]);
 
   useEffect(() => {
     courseApi.getFullCourse(courseId).then(res => {
@@ -253,7 +338,25 @@ export default function CourseDetail() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-gray-50 dark:bg-slate-900">
+    <div className="flex h-[calc(100vh-4rem)] bg-gray-50 dark:bg-slate-900 relative">
+      {/* Dynamic Watermark Overlay */}
+      {user && currentLesson?.videoUrl && (
+        <div
+          ref={watermarkRef}
+          className="fixed pointer-events-none z-50 transition-all duration-1000 ease-in-out"
+          style={{
+            opacity: 0.15,
+            fontSize: '14px',
+            color: '#fff',
+            textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
+            transform: 'rotate(-15deg)',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          {user.email} • {user.firstName} {user.lastName} • {new Date().toLocaleTimeString()}
+        </div>
+      )}
+
       <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-50 dark:bg-slate-900 lg:mr-72">
         <div className="flex items-center gap-2 mb-4 lg:hidden">
           <button
@@ -275,7 +378,21 @@ export default function CourseDetail() {
             </div>
 
             {currentLesson.videoUrl && (
-              <div className="mb-6">
+              <div className="mb-6 relative select-none">
+                {/* Video-specific watermark overlay */}
+                {user && (
+                  <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center">
+                    <div 
+                      className="text-white/10 text-sm font-mono transform -rotate-15"
+                      style={{ 
+                        textShadow: '1px 1px 2px rgba(0,0,0,0.3)',
+                        userSelect: 'none'
+                      }}
+                    >
+                      {user.email}
+                    </div>
+                  </div>
+                )}
                 {isYouTube(currentLesson.videoUrl) ? (
                   <iframe
                     key={currentLesson._id}
@@ -291,8 +408,9 @@ export default function CourseDetail() {
                     src={currentLesson.videoUrl}
                     className="w-full aspect-video rounded-lg shadow-lg"
                     controls
-                    controlsList="nodownload"
+                    controlsList="nodownload noplaybackrate"
                     disablePictureInPicture
+                    disableRemotePlayback
                     onTimeUpdate={handleTimeUpdate}
                     onEnded={handleVideoEnded}
                     onSeeking={handleSeeking}

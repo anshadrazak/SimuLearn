@@ -10,14 +10,19 @@ export default function Leaderboard() {
   const { user } = useAuth();
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [quiz, setQuiz] = useState(null);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
       setLoading(true);
       try {
         if (quizId) {
-          const res = await quizApi.getLeaderboard(quizId);
-          setLeaderboard(res.data);
+          const [lbRes, quizRes] = await Promise.all([
+            quizApi.getLeaderboard(quizId),
+            quizApi.getQuiz(quizId)
+          ]);
+          setLeaderboard(lbRes.data);
+          setQuiz(quizRes.data);
         }
         setLoading(false);
       } catch (err) {
@@ -48,16 +53,19 @@ export default function Leaderboard() {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link to="/quizzes" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+          <button 
+            onClick={() => quiz?.course ? navigate(`/courses/${quiz.course}`) : navigate(-1)}
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+          >
             <ArrowLeft className="w-5 h-5" />
-          </Link>
+          </button>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Leaderboard</h1>
         </div>
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => quiz?.course ? navigate(`/courses/${quiz.course}`) : navigate(-1)}
           className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
         >
-          Back
+          Back to Course
         </button>
       </div>
 
