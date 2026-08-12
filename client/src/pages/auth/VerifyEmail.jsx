@@ -48,20 +48,26 @@ export default function VerifyEmail() {
           </div>
         )}
         {message && !loading && (
-          <div className="fade-in text-center">
-            <div className="mx-auto w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-4">
-              <CheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+          <div className="fade-in">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+              </div>
             </div>
             <p className="text-gray-600 dark:text-gray-400 mb-6">Redirecting to login...</p>
-            <button onClick={() => navigate('/login')} className="btn btn-primary">
-              Go to Login
-            </button>
+            <div className="flex justify-center">
+              <button onClick={() => navigate('/login')} className="btn btn-primary">
+                Go to Login
+              </button>
+            </div>
           </div>
         )}
         {error && !loading && (
-          <div className="fade-in text-center">
-            <div className="mx-auto w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
-              <XCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
+          <div className="fade-in">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <XCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
+              </div>
             </div>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
               Didn't get a link? Register again to receive a new verification email.

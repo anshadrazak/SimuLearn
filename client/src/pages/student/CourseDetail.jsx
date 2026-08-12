@@ -254,7 +254,7 @@ export default function CourseDetail() {
 
   return (
     <div className="flex h-[calc(100vh-4rem)] bg-gray-50 dark:bg-slate-900">
-      <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-50 dark:bg-slate-900">
+      <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-50 dark:bg-slate-900 lg:mr-72">
         <div className="flex items-center gap-2 mb-4 lg:hidden">
           <button
             onClick={() => setSidebarOpen(true)}
@@ -266,7 +266,7 @@ export default function CourseDetail() {
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{course.title}</span>
         </div>
         {currentLesson ? (
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-5xl mx-auto">
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{currentLesson.title}</h1>

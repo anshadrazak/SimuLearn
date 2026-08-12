@@ -32,8 +32,10 @@ export default function Register() {
     return (
       <AuthLayout title="Check your email" subtitle="We've sent a verification link to your inbox">
         <div className="text-center space-y-6 fade-in">
-          <div className="mx-auto w-16 h-16 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center">
-            <Mail className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+          <div className="flex justify-center">
+            <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center">
+              <Mail className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+            </div>
           </div>
           <p className="text-gray-600 dark:text-gray-400">
             We've sent a verification link to <strong className="text-gray-900 dark:text-white">{form.email}</strong>.
